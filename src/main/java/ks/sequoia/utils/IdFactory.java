@@ -8,7 +8,7 @@ public class IdFactory {
 
     //机器ID  2进制5位  32位减掉1位 31个
     private long workerId;
-    //机房ID 2进制5位  32位减掉1位 31个
+    //机房ID 2进制5位32位减掉1位 31个
     private long datacenterId;
     //代表一毫秒内生成的多个id的最新序号  12位 4096 -1 = 4095 个
     private long sequence;
@@ -42,38 +42,17 @@ public class IdFactory {
     }
 
 
-
+    //临时处理
     public IdFactory() {
-
-        // 检查机房id和机器id是否超过31 不能小于0
-        if (1 > maxWorkerId || workerId < 0) {
-            throw new IllegalArgumentException(
-                    String.format("worker Id can't be greater than %d or less than 0",maxWorkerId));
-        }
-
-        if (datacenterId > maxDatacenterId || datacenterId < 0) {
-
-            throw new IllegalArgumentException(
-                    String.format("datacenter Id can't be greater than %d or less than 0",maxDatacenterId));
-        }
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
-        this.sequence = sequence;
+        this.workerId = 12345678;
+        this.datacenterId = 12345;
+        this.sequence = 2;
     }
 
     // 这个是核心方法，通过调用nextId()方法，让当前这台机器上的snowflake算法程序生成一个全局唯一的id
     public synchronized long nextId() {
         // 这儿就是获取当前时间戳，单位是毫秒
         long timestamp = timeGen();
-        if (timestamp < lastTimestamp) {
-
-            System.err.printf(
-                    "clock is moving backwards. Rejecting requests until %d.", lastTimestamp);
-            throw new RuntimeException(
-                    String.format("Clock moved backwards. Refusing to generate id for %d milliseconds",
-                            lastTimestamp - timestamp));
-        }
-
         // 下面是说假设在同一个毫秒内，又发送了一个请求生成一个id
         // 这个时候就得把seqence序号给递增1，最多就是4096
         if (lastTimestamp == timestamp) {
@@ -104,7 +83,7 @@ public class IdFactory {
      * @param lastTimestamp
      * @return
      */
-    private long tilNextMillis(long lastTimestamp) {
+    public long tilNextMillis(long lastTimestamp) {
 
         long timestamp = timeGen();
 
@@ -114,7 +93,7 @@ public class IdFactory {
         return timestamp;
     }
     //获取当前时间戳
-    private long timeGen(){
+    public long timeGen(){
         return System.currentTimeMillis();
     }
 

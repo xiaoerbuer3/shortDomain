@@ -39,7 +39,7 @@
         WHERE LONG_DOMAIN =
               #{shortDomain:VARCHAR}
     </select>
-    <insert id="addEObj">
+    <insert id="addEObj" parameterType="ks.sequoia.eobj.DomainEObj">
         INSERT INTO KS_DOMAIN (
             DOMAIN_ID AS domainId,
             LONG_DOMAIN AS longDomain,
