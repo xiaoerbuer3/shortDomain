@@ -17,11 +17,11 @@ PRIMARY KEY (`domain_id`)
 
 #设计思路
 ##1)设计流程图
-短域名存储接口
+###短域名存储接口
 ![img_1.png](src/main/resources/img/img_1.png)
  
- 短域名读取接口
-![img_2.png](src/main/resources/img/img_2.png)
+###短域名读取接口
+![img_2.png](img_2.png)
 
 注HashCode分段法:
 由于短域名长度最大为 8 个字符.才生成短域名的时候应该避免生成相同的短域名。可借鉴HashMap确定Hash桶位置坐标算法
