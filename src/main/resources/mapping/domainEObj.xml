@@ -41,19 +41,19 @@
     </select>
     <insert id="addEObj" parameterType="ks.sequoia.eobj.DomainEObj">
         INSERT INTO KS_DOMAIN (
-            DOMAIN_ID AS domainId,
-            LONG_DOMAIN AS longDomain,
-            SHORT_DOMAIN AS shortDomain,
-            CREATE_TIME AS createTime,
-            CREATE_ID AS createId,
-            UPDATE_TIME AS updateTime
+            DOMAIN_ID    ,
+            LONG_DOMAIN  ,
+            SHORT_DOMAIN ,
+            CREATE_TIME  ,
+            CREATE_ID    ,
+            UPDATE_TIME
         )
         VALUES (#{domainId:BIGINT},
-                #{funcPath:VARCHAR},
                 #{longDomain:VARCHAR},
                 #{shortDomain:VARCHAR},
                 #{createTime:TIMESTAMP},
-                #{CREATE_ID:BIGINT},
-                #{UPDATE_TIME:TIMESTAMP}
+                #{createId:BIGINT},
+                #{updateTime:TIMESTAMP}
+                )
     </insert>
 </mapper>

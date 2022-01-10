@@ -1,6 +1,7 @@
-package ks.sequoia.impl;
+package ks.sequoia.aware.impl;
 
 import io.swagger.models.auth.In;
+import ks.sequoia.aware.impl.AbstractCacheServiceImpl;
 import ks.sequoia.eobj.DomainEObj;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.core.task.TaskExecutor;
@@ -99,8 +100,5 @@ public class DomainCacheServiceImpl extends AbstractCacheServiceImpl {
             submitHead(domainEObj);
             return domainEObj;
         }
-
 }
-
-
 }

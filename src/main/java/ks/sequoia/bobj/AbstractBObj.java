@@ -33,7 +33,7 @@ public abstract class AbstractBObj<T extends EObj> implements BObj<T> {
     }
 
     @Override
-    public boolean deleteEObyById(T id) {
+    public boolean deleteEObyById(Object id) {
         return false;
     }
 }

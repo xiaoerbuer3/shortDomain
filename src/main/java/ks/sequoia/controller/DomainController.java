@@ -5,9 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import ks.sequoia.aware.CacheServiceAware;
 import ks.sequoia.eobj.DomainEObj;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
