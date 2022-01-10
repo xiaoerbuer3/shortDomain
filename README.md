@@ -23,8 +23,10 @@ PRIMARY KEY (`domain_id`)
 ###短域名读取接口
 ![img_2.png](img_2.png)
 
-注HashCode分段法:
-由于短域名长度最大为 8 个字符.才生成短域名的时候应该避免生成相同的短域名。可借鉴HashMap确定Hash桶位置坐标算法
+
+注：
+
+HashCode分段法:由于短域名长度最大为 8 个字符.才生成短域名的时候应该避免生成相同的短域名。可借鉴HashMap确定Hash桶位置坐标算法
 由于A-Z，a-z,0-9 '-', '_' 刚好64字符（即源码中ks.sequoia.impl.AbstractCacheServiceImpl.digits数组），
 即2^6 计算因子是6，当长域名长度小于8，整个字符串的HashCode高16位与低16计算并与计算因子，则得到数组下标，此时
 是短域名 的第一个元素，其它几位分为按照char字符按照上述方法计算，得到其余位的数组下标。组成短域名。当长域名长度
@@ -32,10 +34,55 @@ PRIMARY KEY (`domain_id`)
 HashCode值是int类型，即是4*8 = 32 bit，则分为8段，前7段分别与最后一段做异或运算，减少Hash碰撞，并与计算因子
 与运算， 确定数组下标。 所以满足短域名的最大 长度是8个字符。
 
+缓存预热:
+    在ks.sequoia.aware.impl.AbstractCacheServiceImpl初始化方法中进行初始化操作，可根据具体情况将热点数据预加载进入jvm内存。
+
+
+缓存穿透：
+    从缓存取不到的数据，在数据库中也没有取到， 将key-value对写为key-null,由于HashMap不具备重复性，大量的请求 请求相同的key也不会造成问题。
+
+
+
+
+
 ##2)具体实现
 构建longMappingMap(长域名存储缓存),shortMappingMap（短域名存储缓存）,lruList（LRU队列）
 
 ```  
+    /**
+      * 计算因子，011111b,计算去除digits的数组下标
+      */
+     private static final int DEFAULT_FACTOR = (1 << 6) - 1;
+     /**
+      * 长域名大于8时，最大的迭代次数
+      */
+     private static final int TOTAL = 1 << 3;
+     /**
+      * 每次迭代的跨度
+      */
+     private static final int SPAN = 1 << 2;
+     /**
+      * 前7段和最后一段的计算因子
+      */
+     private static final int LAST_CAL_FACTOR = (TOTAL - 1) * SPAN;
+     /**
+      * int类型的最大bit
+      */
+     private static final int MAX_BIT = 1 << 5;
+ 
+     /**
+      * 初始化缓存容量
+      */
+     protected static final int INITIAL_CAPACITY = 102400;
+ 
+     //2^6
+     final static char[] digits = {'0', '1', '2', '3', '4', '5', '6', '7', '8',
+             'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+             '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+             'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
+             'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
+             'Z', '-', '_'};
+
   #初始化缓存容量大小 
   protected static final int INITIAL_CAPACITY = 10240; 
   /**

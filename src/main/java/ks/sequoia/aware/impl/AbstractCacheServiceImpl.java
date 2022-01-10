@@ -107,6 +107,10 @@ public abstract class AbstractCacheServiceImpl implements CacheServiceAware {
                     sb.append(digits[p]);
                 }
             }
+            DomainEObj domain = this.getDomainBObj().queryEObjByShortDomain(sb.toString());
+            if(domain  == null){
+                return null;
+            }
             return addDomainEObj(longDomain, sb.toString());
         }
         return domainEObj;
