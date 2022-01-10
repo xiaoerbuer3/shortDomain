@@ -2,99 +2,207 @@ package ks.sequoia.utils;
 
 import org.springframework.stereotype.Component;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.Random;
+
 @Component
 public class IdFactory {
 
+    /**
+     * 机器id所占的位数
+     */
+    private static final int WORK_LEN = 5;
 
-    //机器ID  2进制5位  32位减掉1位 31个
-    private long workerId;
-    //机房ID 2进制5位32位减掉1位 31个
-    private long datacenterId;
-    //代表一毫秒内生成的多个id的最新序号  12位 4096 -1 = 4095 个
-    private long sequence;
-    //设置一个时间初始值    2^41 - 1   差不多可以用69年
-    private long twepoch = 1585644268888L;
-    //5位的机器id
-    private long workerIdBits = 5L;
-    //5位的机房id
-    private long datacenterIdBits = 5L;
-    //每毫秒内产生的id数 2 的 12次方
-    private long sequenceBits = 12L;
-    // 这个是二进制运算，就是5 bit最多只能有31个数字，也就是说机器id最多只能是32以内
-    private long maxWorkerId = -1L ^ (-1L << workerIdBits);
-    // 这个是一个意思，就是5 bit最多只能有31个数字，机房id最多只能是32以内
-    private long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
+    /**
+     * 数据标识id所占的位数
+     */
+    private static final int DATA_LEN = 5;
 
-    private long workerIdShift = sequenceBits;
-    private long datacenterIdShift = sequenceBits + workerIdBits;
-    private long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
-    private long sequenceMask = -1L ^ (-1L << sequenceBits);
-    //记录产生时间毫秒数，判断是否是同1毫秒
-    private long lastTimestamp = -1L;
-    public long getWorkerId(){
-        return workerId;
-    }
-    public long getDatacenterId() {
-        return datacenterId;
-    }
-    public long getTimestamp() {
-        return System.currentTimeMillis();
-    }
+    /**
+     * 毫秒内序列的长度
+     */
+    private static final int SEQ_LEN = 12;
+
+    /**
+     * 时间部分所占长度
+     */
+    private static final int TIME_LEN = 41;
+
+    /**
+     * 开始时间截 (2015-01-01)
+     */
+    private static final long START_TIME = 1420041600000L;
 
 
-    //临时处理
-    public IdFactory() {
-        this.workerId = 12345678;
-        this.datacenterId = 12345;
-        this.sequence = 2;
-    }
+    /**
+     * 上次生成iD的时间戳
+     */
+    private static volatile long LAST_TIME_STAMP = -1L;
 
-    // 这个是核心方法，通过调用nextId()方法，让当前这台机器上的snowflake算法程序生成一个全局唯一的id
-    public synchronized long nextId() {
-        // 这儿就是获取当前时间戳，单位是毫秒
-        long timestamp = timeGen();
-        // 下面是说假设在同一个毫秒内，又发送了一个请求生成一个id
-        // 这个时候就得把seqence序号给递增1，最多就是4096
-        if (lastTimestamp == timestamp) {
 
-            // 这个意思是说一个毫秒内最多只能有4096个数字，无论你传递多少进来，
-            //这个位运算保证始终就是在4096这个范围内，避免你自己传递个sequence超过了4096这个范围
-            sequence = (sequence + 1) & sequenceMask;
-            //当某一毫秒的时间，产生的id数 超过4095，系统会进入等待，直到下一毫秒，系统继续产生ID
-            if (sequence == 0) {
-                timestamp = tilNextMillis(lastTimestamp);
-            }
+    /**
+     * 时间部分向左移动的位数22(雪花算法总长度64,最高位是符号位，正数是0，负数是1，所以id一般是正数，最高位是 1)
+     */
+    private static final int TIME_LEFT_BIT = 64 - 1 - TIME_LEN;
 
-        } else {
-            sequence = 0;
+
+    private static final long DATA_ID = getDataId();
+
+    private static final long WORK_ID = getWorkId();
+
+    /**
+     * 数据中心id最大值 31
+     */
+    private static final int DATA_MAX_NUM = ~(-1 << DATA_LEN);
+
+    /**
+     * 数据中心id最大值 31
+     */
+    private static final int WORK_MAX_NUM = ~(-1 << WORK_LEN);
+
+
+    /**
+     * 机器随机获取数据中中心id的参数 32
+     */
+    private static final int DATA_RANDOM = DATA_MAX_NUM + 1;
+
+
+    /**
+     * 随机获取的机器id的参数
+     */
+    private static final int WORK_RANDOM = WORK_MAX_NUM + 1;
+
+    /**
+     * 数据中心id左移位数 17
+     */
+    private static final int DATA_LEFT_BIT = TIME_LEFT_BIT - DATA_LEN;
+
+    /**
+     * 机器id左移位数 12
+     */
+    private static final int WROK_LEFT_BIT = DATA_LEFT_BIT - WORK_LEN;
+
+    /**
+     * 上一次毫秒的序列值
+     */
+    private static volatile long LAST_SEQ = 0L;
+
+
+    /**
+     * 毫秒内序列的最大值 4095
+     */
+    private static final long SEQ_MAX_NUM = ~(-1 << SEQ_LEN);
+
+
+
+
+
+    // ==============================Methods==========================================
+
+    /**
+     * 根据host name 取余，发生异常就获取0到31之间的随机数
+     * @return
+     */
+    public static int getWorkId() {
+
+        try {
+            return getHostId(Inet4Address.getLocalHost().getHostAddress(), WORK_MAX_NUM);
+        } catch (UnknownHostException e) {
+            return new Random().nextInt(WORK_RANDOM);
         }
-        // 这儿记录一下最近一次生成id的时间戳，单位是毫秒
-        lastTimestamp = timestamp;
-        // 这儿就是最核心的二进制位运算操作，生成一个64bit的id
-        // 先将当前时间戳左移，放到41 bit那儿；将机房id左移放到5 bit那儿；将机器id左移放到5 bit那儿；将序号放最后12 bit
-        // 最后拼接起来成一个64 bit的二进制数字，转换成10进制就是个long型
-        return ((timestamp - twepoch) << timestampLeftShift) |
-                (datacenterId << datacenterIdShift) |
-                (workerId << workerIdShift) | sequence;
+
     }
 
     /**
-     * 当某一毫秒的时间，产生的id数 超过4095，系统会进入等待，直到下一毫秒，系统继续产生ID
-     * @param lastTimestamp
+     * 根据host name 取余，发生异常就获取0到31之间的随机数
      * @return
      */
-    public long tilNextMillis(long lastTimestamp) {
+    public static int getDataId() {
 
+        try {
+            return getHostId(Inet4Address.getLocalHost().getHostAddress(), DATA_MAX_NUM);
+        } catch (UnknownHostException e) {
+            return new Random().nextInt(DATA_RANDOM);
+        }
+
+    }
+
+    /**
+     * 根据host name 取余
+     *
+     * @return
+     */
+    private static int getHostId(String s, int max) {
+        byte[] bytes = s.getBytes();
+        int sums = 0;
+        for (byte b : bytes) {
+            sums += b;
+        }
+        return sums % (max + 1);
+    }
+
+    /**
+     * 获得下一个ID (该方法是线程安全的)
+     *
+     * @return SnowflakeId
+     */
+    public static  synchronized long nextId() {
+        long now = timeGen();
+
+        //如果当前时间小于上一次ID生成的时间戳，说明系统时钟回退过这个时候应当抛出异常
+        if (now < LAST_TIME_STAMP) {
+            throw new RuntimeException(
+                    String.format("Clock moved backwards.  Refusing to generate id for %d milliseconds", LAST_SEQ - now));
+        }
+
+        //如果是同一时间生成的，则进行毫秒内序列
+        if (now == LAST_TIME_STAMP) {
+            LAST_SEQ = (LAST_SEQ + 1) & SEQ_MAX_NUM;
+            //毫秒内序列溢出
+            if (LAST_SEQ == 0) {
+                //阻塞到下一个毫秒,获得新的时间戳
+                now = tilNextMillis(LAST_TIME_STAMP);
+            }
+        }
+        //时间戳改变，毫秒内序列重置
+        else {
+            LAST_SEQ = 0L;
+        }
+
+        //上次生成ID的时间截
+        LAST_TIME_STAMP = now;
+
+        //移位并通过或运算拼到一起组成64位的ID
+        return ((now - START_TIME) << TIME_LEFT_BIT)
+                | (DATA_ID << DATA_LEFT_BIT)
+                | (WORK_ID << WROK_LEFT_BIT)
+                | LAST_SEQ;
+    }
+
+    /**
+     * 阻塞到下一个毫秒，直到获得新的时间戳
+     *
+     * @param lastTimestamp 上次生成ID的时间截
+     * @return 当前时间戳
+     */
+    public static  long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
-
         while (timestamp <= lastTimestamp) {
             timestamp = timeGen();
         }
         return timestamp;
     }
-    //获取当前时间戳
-    public long timeGen(){
+
+    /**
+     * 返回以毫秒为单位的当前时间
+     *
+     * @return 当前时间(毫秒)
+     */
+    protected static long timeGen() {
         return System.currentTimeMillis();
     }
+
+
 
 }

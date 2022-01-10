@@ -3,8 +3,8 @@ package ks.sequoia;
 
 import ks.sequoia.aware.CacheServiceAware;
 import ks.sequoia.aware.impl.AbstractCacheServiceImpl;
-import ks.sequoia.aware.impl.DomainCacheServiceImpl;
 import ks.sequoia.bobj.DomainBObj;
+import ks.sequoia.controller.DomainController;
 import ks.sequoia.eobj.DomainEObj;
 import ks.sequoia.eobj.LRU;
 import ks.sequoia.utils.IdFactory;
@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
@@ -49,6 +50,8 @@ public class DomainTest {
 
     @Resource
     private CacheServiceAware cacheService;
+    @Resource
+    DomainController domainController;
 
 
 
@@ -82,13 +85,10 @@ public class DomainTest {
 
     @Test
     public void testIdFactory(){
-        IdFactory idFactory = new IdFactory();
-        idFactory.nextId();
-        idFactory.getDatacenterId();
-        idFactory.getWorkerId();
-        idFactory.getTimestamp();
-        idFactory.tilNextMillis(System.currentTimeMillis());
-        idFactory.timeGen();
+         System.out.println("test"+IdFactory.nextId());
+         System.out.println(  IdFactory.getDataId());
+         System.out.println(IdFactory.getWorkId());
+        System.out.println(IdFactory.tilNextMillis(System.currentTimeMillis()));
     }
 
     @Test
@@ -122,4 +122,13 @@ public class DomainTest {
         AbstractCacheServiceImpl domainCacheService = (AbstractCacheServiceImpl)cacheService;
 
     }
+
+    @Test
+    public void testController(){
+        domainController.queryEObjByLongDomain("http://www.360doc.com/content/12/0731/14/1073512_227467421.shtml");
+        domainController.queryEObjByShortDomain("http://www.360doc.com/content/12/0731/14/1073512_227467421.shtml");
+
+    }
+
+
 }

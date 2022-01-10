@@ -112,12 +112,21 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.4</version>
+
                 <configuration>
                     <!--指定生成 .exec 文件的存放位置-->
                     <destFile>target/coverage-reports/jacoco-unit.exec</destFile>
                     <!--Jacoco 是根据 .exec 文件生成最终的报告，所以需指定 .exec 的存放路径-->
                     <dataFile>target/coverage-reports/jacoco-unit.exec</dataFile>
+                    <excludes>
+                        <exclude>ks/sequoia/bobj/*</exclude>
+                        <exclude>ks/sequoia/eobj/*</exclude>
+                        <exclude>ks/sequoia/Application.class</exclude>
+                        <exclude>**/*DTO$*.*</exclude>
+                    </excludes>
+
                 </configuration>
+
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>
