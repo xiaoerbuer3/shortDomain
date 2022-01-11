@@ -122,7 +122,8 @@
                         <exclude>ks/sequoia/bobj/*</exclude>
                         <exclude>ks/sequoia/eobj/*</exclude>
                         <exclude>ks/sequoia/Application.class</exclude>
-                        <exclude>**/*DTO$*.*</exclude>
+                        <exclude>ks/sequoia/utils/*</exclude>
+                        <exclude>ks/sequoia/controller/*</exclude>
                     </excludes>
 
                 </configuration>

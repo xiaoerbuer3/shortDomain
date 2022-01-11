@@ -3,6 +3,7 @@ package ks.sequoia;
 
 import ks.sequoia.aware.CacheServiceAware;
 import ks.sequoia.aware.impl.AbstractCacheServiceImpl;
+import ks.sequoia.aware.impl.DomainCacheServiceImpl;
 import ks.sequoia.bobj.DomainBObj;
 import ks.sequoia.controller.DomainController;
 import ks.sequoia.eobj.DomainEObj;
@@ -49,7 +50,7 @@ public class DomainTest {
     private DomainBObj domainBObj;
 
     @Resource
-    private CacheServiceAware cacheService;
+    private DomainCacheServiceImpl cacheService;
     @Resource
     DomainController domainController;
 
@@ -118,10 +119,15 @@ public class DomainTest {
     @Test
     public void testService(){
         cacheService.queryEObjByLongDomain("http://www.360doc.com/content/12/0731/14/1073512_227467421.shtml");
-        cacheService.queryEObjByShortDomain("test");
-        AbstractCacheServiceImpl domainCacheService = (AbstractCacheServiceImpl)cacheService;
+        cacheService.queryEObjByLongDomain("www.36");
+        cacheService.queryEObjByLongDomain(null);
 
-    }
+        cacheService.queryEObjByShortDomain("testet");
+        cacheService.queryEObjByShortDomain("http://www.360doc.com/content/12");
+        cacheService.test("http://www.360doc.com/content/12");
+
+
+    }/*
 
     @Test
     public void testController(){
@@ -129,6 +135,6 @@ public class DomainTest {
         domainController.queryEObjByShortDomain("http://www.360doc.com/content/12/0731/14/1073512_227467421.shtml");
 
     }
-
+*/
 
 }

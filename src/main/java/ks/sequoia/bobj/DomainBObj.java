@@ -21,7 +21,7 @@ public class DomainBObj extends AbstractBObj<DomainEObj> {
     }
 
     public boolean addEObj(DomainEObj input){
-        if(input == null){
+        if(input.getDomainId() == null){
             input.setDomainId(this.getIdFactory().nextId());
         }
         this.getSqlSessionTemplate().insert("KS_DOMAIN.addEObj",input);

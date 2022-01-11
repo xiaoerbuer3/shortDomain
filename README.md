@@ -172,7 +172,7 @@ public class LRU<K,V> {
 *如果不存在溢出现象，直接加入LRU队列.如果存在溢出现象，则溢出队首元素，并将从数据库读取的数据加入队尾
 */
 
-~~~~@Override
+    @Override
     public DomainEObj queryEObjByShortDomain(String shortDomain) {
         if (StringUtils.isEmpty(shortDomain)) {
             throw new RuntimeException("long domain name is not exist");
@@ -276,33 +276,45 @@ public class LRU<K,V> {
     *bit，则分为8段，前7段分别与最后一段做异或运算，减少Hash碰撞，并与计算因子与运算，确定数组下标。所以满足短域名的最大
     *长度是8个字符。
     */
-    protected DomainEObj transformShortDomain(String longDomain) {
-       DomainEObj domainEObj =  longMappingMap.get(longDomain);
-       //使用HashCode方法和equals生成短域名
-       if(domainEObj == null){
-           //得到longDomain的Hash值，^和>>>减少Hash碰撞
-           StringBuffer sb = new StringBuffer();
-           int pos = hash(longDomain) & DEFAULT_FACTOR;//元素的第一个位置
-           sb.append(digits[pos]);
-           if(longDomain.length() < 8){
-               char[] chars = longDomain.toCharArray();
-               for(char c : chars){
-                  int p  =  hash(c) & DEFAULT_FACTOR;
-                  sb.append(digits[p]);
-               }
-           }else {
-                 int hashCode = longDomain.hashCode();
-                 //将hashCode一分为8，最后一位参与^运算，减少hash碰撞
-                 for(int ind = 1 ;ind <= TOTAL ;ind++){
-                     int cal = 1>>>(ind * SPAN) ^(hashCode>>>(TOTAL * SPAN));
-                     int p = cal & DEFAULT_FACTOR;
-                     sb.append(digits[p]);
-               }
-           }
-           return addDomainEObj(longDomain,sb.toString());
-       }
-       return domainEObj;
-    }
+     //短域名长度最大为 8 个字符
+        protected DomainEObj transformShortDomain(String longDomain) {
+            DomainEObj domainEObj = longMappingMap.get(longDomain);
+            //使用HashCode方法和equals生成短域名
+            if (domainEObj == null) {
+                //得到longDomain的Hash值，^和>>>减少Hash碰撞
+                StringBuffer sb = new StringBuffer();
+                int pos = hash(longDomain) & DEFAULT_FACTOR;//元素的第一个位置
+                sb.append(digits[pos]);
+                if (longDomain.length() < 8) {
+                    char[] chars = longDomain.toCharArray();
+                    for (char c : chars) {
+                        int p = hash(c) & DEFAULT_FACTOR;
+                        sb.append(digits[p]);
+                    }
+                } else {
+                    int hashCode = longDomain.hashCode();
+                    //将hashCode一分为8，最后一位参与^运算，减少hash碰撞
+                    for (int ind = 1; ind < TOTAL; ind++) {
+                        System.out.println(hashCode >> ((MAX_BIT - ind * SPAN)));
+                        int cal = hashCode >> ((MAX_BIT - ind * SPAN)) ^ (hashCode >>> LAST_CAL_FACTOR);
+                        int p = cal & DEFAULT_FACTOR;
+                        sb.append(digits[p]);
+                    }
+                }
+                DomainEObj domain = this.getDomainBObj().queryEObjByShortDomain(sb.toString());
+                if (domain != null) {
+                    DomainEObj one = new DomainEObj();
+                    domainEObj.setLongDomain(longDomain);
+                    domainEObj.setShortDomain(sb.toString());
+                    domainEObj.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                    domainEObj.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                    return one;
+                }
+                return addDomainEObj(longDomain, sb.toString());
+            }
+            return domainEObj;
+        }
+
 
 ``` 
 #集成Swagger API文档
@@ -310,3 +322,5 @@ public class LRU<K,V> {
 ![img.png](src/main/resources/img/img.png)
 
 #Jacoco生成测试报告
+
+![report.png](src/main/resources/img/report.png)

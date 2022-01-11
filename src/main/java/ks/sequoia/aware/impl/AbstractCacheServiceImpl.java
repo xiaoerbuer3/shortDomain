@@ -5,6 +5,7 @@ import ks.sequoia.aware.CacheServiceAware;
 import ks.sequoia.bobj.DomainBObj;
 import ks.sequoia.eobj.DomainEObj;
 import ks.sequoia.eobj.LRU;
+import ks.sequoia.utils.IdFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -108,8 +109,13 @@ public abstract class AbstractCacheServiceImpl implements CacheServiceAware {
                 }
             }
             DomainEObj domain = this.getDomainBObj().queryEObjByShortDomain(sb.toString());
-            if(domain  == null){
-                return null;
+            if (domain != null) {
+                DomainEObj one = new DomainEObj();
+                domainEObj.setLongDomain(longDomain);
+                domainEObj.setShortDomain(sb.toString());
+                domainEObj.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                domainEObj.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                return one;
             }
             return addDomainEObj(longDomain, sb.toString());
         }

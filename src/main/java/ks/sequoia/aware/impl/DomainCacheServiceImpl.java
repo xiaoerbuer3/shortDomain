@@ -1,7 +1,5 @@
 package ks.sequoia.aware.impl;
 
-import io.swagger.models.auth.In;
-import ks.sequoia.aware.impl.AbstractCacheServiceImpl;
 import ks.sequoia.eobj.DomainEObj;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.core.task.TaskExecutor;
@@ -21,16 +19,18 @@ public class DomainCacheServiceImpl extends AbstractCacheServiceImpl {
 
     @Override
     public DomainEObj queryEObjByLongDomain(String longDomain) {
-        if (StringUtils.isEmpty(longDomain)) {
-            throw new RuntimeException("long domain name is not exist");
+        if(longDomain == null){
+            return null;
         }
         DomainEObj domainEObj = longMappingMap.get(longDomain);
         if (domainEObj == null) {
             DomainEObj domain = this.getDomainBObj().queryEObjByLongDomain(longDomain);
             //说明数据库也没有数据
-            domain =  transformShortDomain(longDomain);
-            //使用异步线程放到缓存中去,遵循最近最少使用原则.
-            submitTail(domain);
+            if(domain == null){
+                domain =  transformShortDomain(longDomain);
+                //使用异步线程放到缓存中去,遵循最近最少使用原则.
+                submitTail(domain);
+            }
             return domain;
         } else {
             //高并发情况下 ,防止高并发,并将最近访问的更新到尾部

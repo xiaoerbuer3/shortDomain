@@ -16,7 +16,7 @@ public class DomainEObj extends AbstractEObj{
     /**
      * 主键
      */
-    private long domainId;
+    private Long domainId;
     /**
      * 长域名
      */
