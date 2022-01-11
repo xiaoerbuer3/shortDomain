@@ -102,7 +102,6 @@ public abstract class AbstractCacheServiceImpl implements CacheServiceAware {
                 int hashCode = longDomain.hashCode();
                 //将hashCode一分为8，最后一位参与^运算，减少hash碰撞
                 for (int ind = 1; ind < TOTAL; ind++) {
-                    System.out.println(hashCode >> ((MAX_BIT - ind * SPAN)));
                     int cal = hashCode >> ((MAX_BIT - ind * SPAN)) ^ (hashCode >>> LAST_CAL_FACTOR);
                     int p = cal & DEFAULT_FACTOR;
                     sb.append(digits[p]);
