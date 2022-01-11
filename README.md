@@ -5,11 +5,11 @@
 # 域名表结构
 ```
 CREATE TABLE `ks_domain` (
-`domain_id` decimal(10,0) NOT NULL COMMENT '主键',
+`domain_id` decimal(18,0) NOT NULL COMMENT '主键',
 `long_domain` varchar(100) NOT NULL COMMENT '长域名',
 `short_domain` varchar(8) NOT NULL COMMENT '短域名',
 `create_Time` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '创建时间',
-`create_Id` decimal(10,0) DEFAULT NULL COMMENT '创建人Id',
+`create_Id` decimal(18,0) DEFAULT NULL COMMENT '创建人Id',
 `update_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
 PRIMARY KEY (`domain_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
